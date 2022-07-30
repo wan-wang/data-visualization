@@ -4,16 +4,31 @@
 <meta charset="utf-8">
 <script src="https://d3js.org/d3.v6.js"></script>
 
+<body>
+  <label for="year">Choose a year: </label>
+  <input type="range" min=2020 max=2022 step=1 id="year" value=2020 oninput="selected_year.value = year.value">
+  <output name="selected_year" id="selected_year">2022</output>
+</body>
+
+<style>
+  .bubbles {
+    stroke-width: 2px;
+    stroke: grey;
+  }
+  .bubbles:hover {
+    stroke: black;
+  }
+</style>
+
+
 <div id="vis"></div>
+
 
 <script>
 
-    const margin = {top: 10, right: 20, bottom: 30, left: 50},
-        total_width = document.getElementById('vis')
-        .clientWidth,
-        // !!! change to clientHeight
-        total_height = document.getElementById('vis')
-        .clientWidth,
+    const margin = {top: 30, right: 20, bottom: 30, left: 50},
+        total_width = 1000,
+        total_height = 800,
         width = total_width - margin.left - margin.right,
         height = total_height - margin.top - margin.bottom;
     
@@ -24,40 +39,101 @@
       .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    d3.csv("https://raw.githubusercontent.com/wan-wang/data-visualization/main/data.csv").then( function(data) {
+
+    d3.csv("https://raw.githubusercontent.com/wan-wang/data-visualization/main/data_yearly.csv").then( function(full_data) {
     
-      // X axis
-      const x = d3.scaleLog()
-        .domain([570000, 40000000])
-        .range([ 0, width ]);
-      svg.append("g")
-        .attr("transform", `translate(0, ${height})`)
-        .call(d3.axisBottom(x));
-    
-      // Y axis
-      const y = d3.scaleLog()
-        .domain([450, 9700000])
-        .range([ height, 0]);
-      svg.append("g")
-        .call(d3.axisLeft(y));
-    
-      // bubble size
-      const z = d3.scaleLinear()
-        .domain([450, 353200])
-        .range([ 1, 40]);
-    
-      // Add dots
-      svg.append('g')
-        .selectAll("dot")
-        .data(data)
-        .join("circle")
-          .attr("cx", d => x(d.population))
-          .attr("cy", d => y(d.total_cases_2022_06_01))
-          .attr("r", d => z(d.total_cases_pre_million_2022_06_01))
-          .style("fill", "#69b3a2")
-          .style("opacity", "0.7")
-          .attr("stroke", "black")
-    
+      draw("2020");
+
+      function draw(year) 
+      {
+        year_data = full_data.filter(function(d) {
+                  return d.year == year;
+              });
+
+        // X axis
+        const x_scale = d3.scaleLog()
+          .domain([570000, 42000000])
+          .range([ 0, width ]);
+        svg.append("g")
+          .attr("transform", `translate(0, ${height})`)
+          .call(d3.axisBottom(x_scale).tickFormat(d3.format("~s")));
+      
+        // Y axis
+        const y_scale = d3.scaleLog()
+          .domain([
+            d3.min(year_data, function(d) {
+                  return +d.total_cases;
+               }),  
+            d3.max(year_data, function(d) {
+            return +d.total_cases;
+               }) * 1.2  
+            ])
+          .range([ height, 0]);
+        svg.append("g")
+          .call(d3.axisLeft(y_scale).tickFormat(d3.format("~s")));
+      
+        // bubble size
+        const r_scale = d3.scaleLinear()
+          .domain(d3.extent(year_data, function(d) {
+                return (+d.total_cases_pre_million);
+            }))
+          .range([ 3, 30]);
+
+        const tooltip = d3.select("#vis")
+          .append("div")
+            .style("position", "absolute")
+            .style("opacity", 0)
+            .attr("class", "tooltip")
+            .style("background-color", "black")
+            .style("border-radius", "5px")
+            .style("padding", "10px")
+            .style("color", "white")
+
+        const showTooltip = function(event, d) {
+          tooltip
+            .transition()
+            .duration(200)
+          tooltip
+            .style("opacity", 1)
+            .html("State: " + d.state)
+            console.log(event.pageX);
+        }
+        const moveTooltip = function(event, d) {
+          tooltip
+            .style("left", (event.pageX)*0.8 + "px")
+            .style("top", (event.pageY)*0.7 + "px")
+        }
+        const hideTooltip = function(event, d) {
+          tooltip
+            .transition()
+            .duration(200)
+            .style("opacity", 0)
+        }
+
+        // console.log(event.pageX);
+      
+        // Add dots
+        svg.append('g')
+          .selectAll("dot")
+          .data(year_data)
+          .join("circle")
+            .attr("class", "bubbles")
+            .attr("cx", d => x_scale(d.population))
+            .attr("cy", d => y_scale(d.total_cases))
+            .attr("r", d => r_scale(d.total_cases_pre_million))
+            .style("fill", "#eebfff")
+            // .style("opacity", "0.7")
+            // .attr("stroke", "black")
+          .on("mouseover", showTooltip )
+          .on("mousemove", moveTooltip )
+          .on("mouseleave", hideTooltip )
+
+        var slider = d3.select('#year');
+        slider.on('change', function() {
+            svg.selectAll("*").remove();
+            draw(this.value);
+        });
+      }
     })
     
     </script>
