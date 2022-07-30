@@ -29,7 +29,7 @@
 
 <script>
 
-    const margin = {top: 80, right: 20, bottom: 30, left: 50},
+    const margin = {top: 100, right: 20, bottom: 30, left: 50},
         total_width = 1000,
         total_height = 800,
         width = total_width - margin.left - margin.right,
@@ -57,16 +57,16 @@
         // Add title
         svg.append("text")
             .attr("text-anchor", "end")
-            .attr("x", 150)
-            .attr("y", -20 )
-            .text("COVID cases per million population in different states")
+            .attr("x", 50)
+            .attr("y", -30 )
+            .text("COVID cases per million population in different states over three years")
             .attr("text-anchor", "start")
             .style("font", "30px times")
         
         svg.append("text")
             .attr("text-anchor", "end")
             .attr("x", 176)
-            .attr("y", -65 )
+            .attr("y", -80 )
             .text("June 1st")
             .attr("text-anchor", "start")
 
