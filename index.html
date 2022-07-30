@@ -17,7 +17,7 @@
 <style>
   .bubbles {
     stroke-width: 2px;
-    stroke: grey;
+    stroke: #969998;
   }
   .bubbles:hover {
     stroke: red;
@@ -58,9 +58,9 @@
         // Add title
         svg.append("text")
             .attr("text-anchor", "end")
-            .attr("x", total_width/2-500)
+            .attr("x", total_width/2-400)
             .attr("y", -30 )
-            .text("COVID cases per million population in different states over three years")
+            .text("COVID cases per capita in different states over three years")
             .attr("text-anchor", "start")
             .style("font", "30px times")
         
@@ -79,7 +79,7 @@
             .attr("y", 20 )
             .text("Instruction: Hover to a circle to see which state it represents!")
             .attr("text-anchor", "start")
-            .style("font", "16px times")
+            .style("font", "20px times")
             .style('fill', '#ad48bd')
 
         // X axis
@@ -124,17 +124,17 @@
       
         // bubble size
         const r_scale = d3.scaleSqrt()
-          .domain(d3.extent(year_data, function(d) {
+          .domain([0, d3.max(year_data, function(d) {
                 return (+d.total_cases_pre_million);
-            }))
-          .range([ 3, 30]);
+            })])
+          .range([ 0, 30]);
         
 
         // add tooltip
         const tooltip = d3.select("#vis")
           .append("div")
             .style("position", "absolute")
-            .style("opacity", 0)
+            .style("visibility", "hidden")
             .attr("class", "tooltip")
             .style("background-color", "black")
             .style("border-radius", "5px")
@@ -143,22 +143,17 @@
 
         const showTooltip = function(d) {
           tooltip
-            .transition()
-            .duration(200)
-          tooltip
-            .style("opacity", 1)
-            .html("State: " + d.state)
+            .style("visibility", "visible")
+            .html("State: " + d.state + " <br> Case per million people: " + ~~(d.total_cases_pre_million))
         }
         const moveTooltip = function(d) {
           tooltip
-            .style("left", (d3.event.pageX)*0.8 + "px")
-            .style("top", (d3.event.pageY)*0.7 + "px")
+            .style("left", (d3.event.pageX - 100) + "px")
+            .style("top", (d3.event.pageY - 120) + "px")
         }
         const hideTooltip = function(d) {
           tooltip
-            .transition()
-            .duration(200)
-            .style("opacity", 0)
+            .style("visibility", "hidden")
         }
 
         // console.log(event.pageX);
@@ -187,8 +182,8 @@
         max_r = d3.max(year_data, function(d) {
                   return +d.total_cases_pre_million;
                })
-        r1 = ~~(min_r / 100)*100
-        r2 = ~~(max_r / 100) * 100
+        r1 = ~~min_r
+        r2 = ~~max_r
 
         const valuesToShow = [+r1, +r2]
         const xCircle = width - 200
@@ -231,8 +226,26 @@
         svg.append("text")
           .attr('x', xCircle)
           .attr("y", height -180)
-          .text("Bubble area: Total cases per million population")
+          .text("Bubble area: Total cases per million people")
           .attr("text-anchor", "middle")
+          .style("font", "18px times")
+          .style("fill", "#919191")
+
+        svg.append("text")
+          .attr('x', xCircle)
+          .attr("y", height - 80)
+          .text("Smaller circle: the minimal of this year")
+          .attr("text-anchor", "middle")
+          .style("font", "15px times")
+          .style("fill", "#919191")
+        
+        svg.append("text")
+          .attr('x', xCircle)
+          .attr("y", height - 60)
+          .text("Larger circle: the maximal of this year")
+          .attr("text-anchor", "middle")
+          .style("font", "15px times")
+          .style("fill", "#919191")
 
 
         // d3-annotation
@@ -254,7 +267,7 @@
         const annotations = [
           {
             note: {
-              label: "Total cases per million pop: "+ hawaii_r,
+              label: "Total cases per million people: "+ hawaii_r,
               title: "Hawaii",
               wrap: 300
             },
@@ -265,7 +278,7 @@
           },
           {
             note: {
-              label: "Total cases per million pop: "+ ny_r,
+              label: "Total cases per million people: "+ ny_r,
               title: "New York"
             },
             x: ny_x,
