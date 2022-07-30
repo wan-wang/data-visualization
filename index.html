@@ -30,7 +30,8 @@
 <script>
 
     const margin = {top: 100, right: 20, bottom: 30, left: 50},
-        total_width = 1000,
+        total_width = document.getElementById('vis')
+    .clientWidth,
         total_height = 800,
         width = total_width - margin.left - margin.right,
         height = total_height - margin.top - margin.bottom;
@@ -57,7 +58,7 @@
         // Add title
         svg.append("text")
             .attr("text-anchor", "end")
-            .attr("x", 50)
+            .attr("x", total_width/2-500)
             .attr("y", -30 )
             .text("COVID cases per million population in different states over three years")
             .attr("text-anchor", "start")
@@ -74,7 +75,7 @@
         // Add instruction
         svg.append("text")
             .attr("text-anchor", "end")
-            .attr("x", 250)
+            .attr("x", total_width/2-260)
             .attr("y", 20 )
             .text("Instruction: Hover to a circle to see which state it represents!")
             .attr("text-anchor", "start")
