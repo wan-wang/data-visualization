@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+
+<meta charset="utf-8">
+<!-- d3 -->
+<script src="https://d3js.org/d3.v4.js"></script>
+<!-- d3-annotation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js"></script>
+
+
+<body>
+  <label for="year">Choose a year: </label>
+  <input type="range" min=2020 max=2022 step=1 id="year" value=2020 oninput="selected_year.value = year.value">
+  <output name="selected_year" id="selected_year">2022</output>
+</body>
+
+<style>
+  .bubbles {
+    stroke-width: 2px;
+    stroke: grey;
+  }
+  .bubbles:hover {
+    stroke: black;
+  }
+</style>
+
+
+<div id="vis"></div>
+
+
+<script>
+
+    var margin = {top: 30, right: 20, bottom: 30, left: 50},
+        total_width = 1000,
+        total_height = 800,
+        width = total_width - margin.left - margin.right,
+        height = total_height - margin.top - margin.bottom;
+    
+    var svg = d3.select("#vis")
+      .append("svg")
+        .attr("width", total_width)
+        .attr("height", total_height)
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+    d3.csv("https://raw.githubusercontent.com/wan-wang/data-visualization/main/data_yearly.csv",function(full_data) {
+    
+      draw("2020");
+
+      function draw(year) 
+      {
+        year_data = full_data.filter(function(d) {
+                  return d.year == year;
+              });
+
+        // X axis
+        var x_scale = d3.scaleLog()
+          .domain([570000, 42000000])
+          .range([ 0, width ]);
+        svg.append("g")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(x_scale).tickFormat(d3.format("~s")));
+      
+        // Y axis
+        var y_scale = d3.scaleLog()
+          .domain([
+            d3.min(year_data, function(d) {
+                  return +d.total_cases;
+               }),  
+            d3.max(year_data, function(d) {
+            return +d.total_cases;
+               }) * 1.2  
+            ])
+          .range([ height, 0]);
+        svg.append("g")
+          .call(d3.axisLeft(y_scale).tickFormat(d3.format("~s")));
+      
+        // bubble size
+        var r_scale = d3.scaleSqrt()
+          .domain(d3.extent(year_data, function(d) {
+                return (+d.total_cases_pre_million);
+            }))
+          .range([ 3, 30]);
+
+        var tooltip = d3.select("#vis")
+          .append("div")
+            .style("position", "absolute")
+            .style("opacity", 0)
+            .attr("class", "tooltip")
+            .style("background-color", "black")
+            .style("border-radius", "5px")
+            .style("padding", "10px")
+            .style("color", "white")
+
+        var showTooltip = function(event, d) {
+          tooltip
+            .transition()
+            .duration(200)
+          tooltip
+            .style("opacity", 1)
+            .html("State: " + d.state)
+        }
+        var moveTooltip = function(event, d) {
+          tooltip
+            .style("left", (event.pageX)*0.8 + "px")
+            .style("top", (event.pageY)*0.7 + "px")
+        }
+        var hideTooltip = function(event, d) {
+          tooltip
+            .transition()
+            .duration(200)
+            .style("opacity", 0)
+        }
+
+        // console.log(event.pageX);
+      
+        // Add dots
+        svg.append('g')
+          .selectAll("dot")
+          .data(year_data)
+          .enter()
+          .append("circle")
+            .attr("class", "bubbles")
+            .attr("cx", function (d) { return x_scale(d.population); } )
+            .attr("cy", function (d) { return y_scale(d.total_cases); } )
+            .attr("r", function (d) { return r_scale(d.total_cases_pre_million); } )
+            .style("fill", "#eebfff")
+            // .style("opacity", "0.7")
+            // .attr("stroke", "black")
+          .on("mouseover", showTooltip )
+          .on("mousemove", moveTooltip )
+          .on("mouseleave", hideTooltip )
+
+        // Add legend
+        // Add legend: circles
+        // min_r = d3.min(year_data, function(d) {
+        //           return +d.total_cases_pre_million;
+        //        })
+        // max_r = d3.max(year_data, function(d) {
+        //           return +d.total_cases_pre_million;
+        //        })
+        // r1 = ~~(min_r / 100)*100
+        // r2 = ~~(max_r / 10000) * 10000
+
+        // var valuesToShow = [+r1, +r2]
+        // var xCircle = width - 100
+        // var xLabel = width - 50
+        // var yCircle = height - 100
+        // svg
+        //   .selectAll("legend")
+        //   .data(valuesToShow)
+        //   .join("circle")
+        //     .attr("cx", xCircle)
+        //     .attr("cy", d => yCircle - r_scale(d))
+        //     .attr("r", d => r_scale(d))
+        //     .style("fill", "none")
+        //     .attr("stroke", "black")
+
+        // // Add legend: segments
+        // svg
+        //   .selectAll("legend")
+        //   .data(valuesToShow)
+        //   .join("line")
+        //     .attr('x1', d => xCircle + r_scale(d))
+        //     .attr('x2', xLabel)
+        //     .attr('y1', d => yCircle - r_scale(d))
+        //     .attr('y2', d => yCircle - r_scale(d))
+        //     .attr('stroke', 'black')
+        //     .style('stroke-dasharray', ('2,2'))
+
+        // // Add legend: labels
+        // svg
+        //   .selectAll("legend")
+        //   .data(valuesToShow)
+        //   .join("text")
+        //     .attr('x', xLabel)
+        //     .attr('y', d => yCircle - r_scale(d))
+        //     .text( d => d)
+        //     .style("font-size", 10)
+        //     .attr('alignment-baseline', 'middle')
+
+        
+        // Change data based on slider
+        var slider = d3.select('#year');
+        slider.on('change', function() {
+            svg.selectAll("*").remove();
+            draw(this.value);
+        });
+
+        // d3-annotation
+
+        // var annotations = [
+        //   {
+        //     note: {
+        //       label: "Here is the annotation label",
+        //       title: "Annotation title"
+        //     },
+        //     x: 100,
+        //     y: 100,
+        //     dy: 100,
+        //     dx: 100
+        //   }
+        // ]
+
+        // // Add annotation to the chart
+        // var makeAnnotations = d3.annotation()
+        //   .annotations(annotations)
+        // d3.select("#vis")
+        //   .append("g")
+        //   .call(makeAnnotations)
+
+        // d3.select("#vis")
+        //   .append("g")
+        //   .attr("class", "annotation-group")
+        //   .call(makeAnnotations);
+
+      }
+    })
+    
+    </script>

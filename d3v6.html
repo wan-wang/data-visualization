@@ -3,9 +3,9 @@
 
 <meta charset="utf-8">
 <!-- d3 -->
-<script src="https://d3js.org/d3.v5.js"></script>
+<script src="https://d3js.org/d3.v6.js"></script>
 <!-- d3-annotation -->
-<script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js"></script>
 
 
 <body>
@@ -20,16 +20,17 @@
     stroke: grey;
   }
   .bubbles:hover {
-    stroke: red;
+    stroke: black;
   }
 </style>
 
 
 <div id="vis"></div>
 
+
 <script>
 
-    const margin = {top: 80, right: 20, bottom: 30, left: 50},
+    const margin = {top: 30, right: 20, bottom: 30, left: 50},
         total_width = 1000,
         total_height = 800,
         width = total_width - margin.left - margin.right,
@@ -39,7 +40,6 @@
       .append("svg")
         .attr("width", total_width)
         .attr("height", total_height)
-        .attr("id", "vis_svg")
       .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -53,15 +53,6 @@
         year_data = full_data.filter(function(d) {
                   return d.year == year;
               });
-        
-        // Add title
-        svg.append("text")
-            .attr("text-anchor", "end")
-            .attr("x", 150)
-            .attr("y", -20 )
-            .text("COVID cases per million population in different states")
-            .attr("text-anchor", "start")
-            .style("font", "30px times")
 
         // X axis
         const x_scale = d3.scaleLog()
@@ -70,14 +61,6 @@
         svg.append("g")
           .attr("transform", `translate(0, ${height})`)
           .call(d3.axisBottom(x_scale).tickFormat(d3.format("~s")));
-
-        // Add X axis label:
-        svg.append("text")
-            .attr("text-anchor", "end")
-            .attr("x", width)
-            .attr("y", height-10 )
-            .text("Population")
-            .style("font", "25px times");
       
         // Y axis
         const y_scale = d3.scaleLog()
@@ -91,17 +74,7 @@
             ])
           .range([ height, 0]);
         svg.append("g")
-          .call(d3.axisLeft(y_scale)
-                  .tickFormat(d3.format("~s")));
-        
-        // Add Y axis label:
-        svg.append("text")
-            .attr("text-anchor", "end")
-            .attr("x", 10)
-            .attr("y", 20 )
-            .text("Total cases")
-            .attr("text-anchor", "start")
-            .style("font", "25px times")
+          .call(d3.axisLeft(y_scale).tickFormat(d3.format("~s")));
       
         // bubble size
         const r_scale = d3.scaleSqrt()
@@ -120,7 +93,7 @@
             .style("padding", "10px")
             .style("color", "white")
 
-        const showTooltip = function(d) {
+        const showTooltip = function(event, d) {
           tooltip
             .transition()
             .duration(200)
@@ -128,12 +101,12 @@
             .style("opacity", 1)
             .html("State: " + d.state)
         }
-        const moveTooltip = function(d) {
+        const moveTooltip = function(event, d) {
           tooltip
-            .style("left", (d3.event.pageX)*0.8 + "px")
-            .style("top", (d3.event.pageY)*0.7 + "px")
+            .style("left", (event.pageX)*0.8 + "px")
+            .style("top", (event.pageY)*0.7 + "px")
         }
-        const hideTooltip = function(d) {
+        const hideTooltip = function(event, d) {
           tooltip
             .transition()
             .duration(200)
@@ -167,11 +140,11 @@
                   return +d.total_cases_pre_million;
                })
         r1 = ~~(min_r / 100)*100
-        r2 = ~~(max_r / 100) * 100
+        r2 = ~~(max_r / 10000) * 10000
 
         const valuesToShow = [+r1, +r2]
-        const xCircle = width - 200
-        const xLabel = width - 150
+        const xCircle = width - 100
+        const xLabel = width - 50
         const yCircle = height - 100
         svg
           .selectAll("legend")
@@ -206,37 +179,6 @@
             .style("font-size", 10)
             .attr('alignment-baseline', 'middle')
 
-        // Legend title
-        svg.append("text")
-          .attr('x', xCircle)
-          .attr("y", height -180)
-          .text("Bubble area: Total cases per million population")
-          .attr("text-anchor", "middle")
-
-
-        // d3-annotation
-
-        const annotations = [
-          {
-            note: {
-              label: "June 1st",
-              title: ""
-            },
-            color: ["black", "blue"],
-            x: 176,
-            y: -80,
-            dy: 0,
-            dx: 0
-          }
-        ]
-
-        // Add annotation to the chart
-        const makeAnnotations = d3.annotation()
-          .annotations(annotations)
-        svg
-          .append("g")
-          .call(makeAnnotations)
-
         
         // Change data based on slider
         var slider = d3.select('#year');
@@ -244,6 +186,33 @@
             svg.selectAll("*").remove();
             draw(this.value);
         });
+
+        // d3-annotation
+
+        const annotations = [
+          {
+            note: {
+              label: "Here is the annotation label",
+              title: "Annotation title"
+            },
+            x: 100,
+            y: 100,
+            dy: 100,
+            dx: 100
+          }
+        ]
+
+        // Add annotation to the chart
+        const makeAnnotations = d3.annotation()
+          .annotations(annotations)
+        d3.select("#vis")
+          .append("g")
+          .call(makeAnnotations)
+
+        // d3.select("#vis")
+        //   .append("g")
+        //   .attr("class", "annotation-group")
+        //   .call(makeAnnotations);
 
       }
     })
