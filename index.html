@@ -62,6 +62,24 @@
             .text("COVID cases per million population in different states")
             .attr("text-anchor", "start")
             .style("font", "30px times")
+        
+        svg.append("text")
+            .attr("text-anchor", "end")
+            .attr("x", 176)
+            .attr("y", -65 )
+            .text("June 1st")
+            .attr("text-anchor", "start")
+
+
+        // Add instruction
+        svg.append("text")
+            .attr("text-anchor", "end")
+            .attr("x", 250)
+            .attr("y", 20 )
+            .text("Instruction: Hover to a circle to see which state it represents!")
+            .attr("text-anchor", "start")
+            .style("font", "16px times")
+            .style('fill', '#ad48bd')
 
         // X axis
         const x_scale = d3.scaleLog()
@@ -109,7 +127,9 @@
                 return (+d.total_cases_pre_million);
             }))
           .range([ 3, 30]);
+        
 
+        // add tooltip
         const tooltip = d3.select("#vis")
           .append("div")
             .style("position", "absolute")
@@ -215,19 +235,43 @@
 
 
         // d3-annotation
+        oregon_data = year_data.filter(function(d) {
+                  return d.state == "Oregon";
+              });
+        oregon_x = x_scale(oregon_data[0].population)
+        oregon_y = y_scale(oregon_data[0].total_cases)
+        oregon_r = ~~(oregon_data[0].total_cases_pre_million)
+
+        ny_data = year_data.filter(function(d) {
+                  return d.state == "New York";
+              });
+        ny_x = x_scale(ny_data[0].population)
+        ny_y = y_scale(ny_data[0].total_cases)
+        ny_r = ~~(ny_data[0].total_cases_pre_million)
+
 
         const annotations = [
           {
             note: {
-              label: "June 1st",
-              title: ""
+              label: "Total cases per million pop: "+ oregon_r,
+              title: "Oregon"
             },
-            color: ["black", "blue"],
-            x: 176,
-            y: -80,
-            dy: 0,
-            dx: 0
+            x: oregon_x,
+            y: oregon_y,
+            dy: 80,
+            dx: -20
+          },
+          {
+            note: {
+              label: "Total cases per million pop: "+ ny_r,
+              title: "New York"
+            },
+            x: ny_x,
+            y: ny_y,
+            dy: 80,
+            dx: 20
           }
+          
         ]
 
         // Add annotation to the chart
