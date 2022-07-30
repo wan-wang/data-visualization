@@ -235,12 +235,12 @@
 
 
         // d3-annotation
-        oregon_data = year_data.filter(function(d) {
-                  return d.state == "Oregon";
+        hawaii_data = year_data.filter(function(d) {
+                  return d.state == "Hawaii";
               });
-        oregon_x = x_scale(oregon_data[0].population)
-        oregon_y = y_scale(oregon_data[0].total_cases)
-        oregon_r = ~~(oregon_data[0].total_cases_pre_million)
+        hawaii_x = x_scale(hawaii_data[0].population)
+        hawaii_y = y_scale(hawaii_data[0].total_cases)
+        hawaii_r = ~~(hawaii_data[0].total_cases_pre_million)
 
         ny_data = year_data.filter(function(d) {
                   return d.state == "New York";
@@ -253,13 +253,14 @@
         const annotations = [
           {
             note: {
-              label: "Total cases per million pop: "+ oregon_r,
-              title: "Oregon"
+              label: "Total cases per million pop: "+ hawaii_r,
+              title: "Hawaii",
+              wrap: 300
             },
-            x: oregon_x,
-            y: oregon_y,
-            dy: 80,
-            dx: -20
+            x: hawaii_x,
+            y: hawaii_y,
+            dy: -1,
+            dx: 50
           },
           {
             note: {
